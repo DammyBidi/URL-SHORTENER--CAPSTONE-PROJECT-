@@ -6,7 +6,7 @@
       <div class="text">
         <h2>Login</h2>
         <p>
-          Dont have an account? <span> <router-link to="/Signup">Sign up</router-link> </span> 
+          Don't have an account? <span> <router-link to="/Signup">Sign up</router-link> </span> 
         </p>
         <button class="provider-btn" @click="loginWithGoogle">
           <img
