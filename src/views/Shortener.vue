@@ -238,6 +238,8 @@ const shortenedLinks = ref<
 const loading = ref<boolean>(false); // New loading indicator state
 const errorMessage = ref<string>("");
 const showMobileNav = ref<boolean>(false);
+// Store the client URL with the shortened ID in combineUrl 
+const combinedUrl = ref<string>("");
 const amountOfLinks = ref<number>(0);
 
 // Fetch data from local storage when the component is mounted
@@ -271,8 +273,12 @@ const shortenUrl = async () => {
 
    amountOfLinks.value += 1;
 
+   loading.value = true;
+
   try {
-    loading.value = true;
+    
+    // Preferably save clientUrl in .env file and read from there
+    const clientUrl = 'http://localhost:5173';
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       { url: originalUrl.value,
@@ -280,9 +286,12 @@ const shortenUrl = async () => {
     }
     );
 
-    // console.log(response.data["data"]["short_id"]);
-
+    console.log(response.data["data"]["short_id"]);
     const shortenedUrl = response.data["data"]["short_id"];
+    
+    combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;
+    // This is the shortened URL that is to be saved to Firebase and visited by the user
+    console.log(combinedUrl.value)
 
     // const shortenedUrl =
     //   customUrl.value ||

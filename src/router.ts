@@ -5,12 +5,14 @@ import Shortener from './views/Shortener.vue';
 import Login from './views/Login.vue';
 import Signup from './views/Signup.vue';
 import Dashboard from './views/Dashboard.vue';
+import GetLinks from './views/GetLinks.vue';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const routes: Array<RouteRecordRaw> = [
   { path: '/', component: Shortener },
   { path: '/login', component: Login },
   { path: '/signup', component: Signup },
+  { path: '/sh/:shortened_id', component: GetLinks },
   {
     path: '/dashboard',
     component: Dashboard,
