@@ -7,7 +7,7 @@
       </div>
       <div>
         <p>Welcome Gideon</p>
-        <button>Signout</button>
+        <button @click="handleLogout" >Signout</button>
       </div>
     </nav>
 
@@ -80,19 +80,27 @@
                 <div class="left1">
                   <div class="sl">
                     <p>{{ link.shortened_url }}</p>
-                    <button @click="copyToClipboard(link.shortened_url, index)">
-                      de
+                    <button
+                      @click="copyToClipboard(link.shortened_url, index)"
+                      :class="{ 'violet-button': link.copied }"
+                    >
+                      {{ link.copied ? "Copied!" : "Copy" }}
                     </button>
                   </div>
                   <p>{{ link.originalUrl }}</p>
                 </div>
                 <div class="right2">
-                  <p>code</p>
+                  <div>
+                    <img
+                      :src="generateQRCode(link.shortened_url)"
+                      alt="QR Code"
+                    />
+                  </div>
                   <p>12</p>
                   <p>Us</p>
                   <p>oct-12-2024</p>
                   <div>
-                    <button  @click="deleteLink(index)">delete</button>
+                    <button @click="deleteLink(index)">Delete</button>
                   </div>
                 </div>
               </div>
@@ -102,7 +110,7 @@
       </div>
     </div>
 
-    <!-- <footer-bg /> -->
+    <footer-bg />
 
     <!-- Add content for the dashboard -->
   </div>
@@ -112,24 +120,30 @@
 // import footerBg from "../components/footer-bg.vue";
 import { ref, watchEffect } from "vue";
 import axios from "axios";
+import { useRouter } from "vue-router";
 import { auth, db } from "../firebase";
+import { signOut, getAuth } from "firebase/auth";
 import { addDoc, collection, deleteDoc, doc } from "firebase/firestore";
+import footerBg from '../components/footer-bg.vue';
 
+const router = useRouter();
 const originalUrl = ref<string>("");
 const customUrl = ref<string>("");
 const shortenedLinks = ref<
-  Array<{ originalUrl: string; shortened_url: string }>
+  Array<{ originalUrl: string; shortened_url: string; copied: boolean }>
 >([]);
 const loading = ref<boolean>(false); // New loading indicator state
 const errorMessage = ref<string>("");
 const showMobileNav = ref<boolean>(false);
+// Store the client URL with the shortened ID in combineUrl 
+const combinedUrl = ref<string>("");
 
 const storedLinks = localStorage.getItem("shortenedLinks");
 if (storedLinks) {
   shortenedLinks.value = JSON.parse(storedLinks);
 }
 
-const shortenUrl = async () => {
+const shortenUrl =  async () => {
   errorMessage.value = "";
   if (!originalUrl.value.trim()) {
     errorMessage.value = "Please enter a valid URL";
@@ -138,6 +152,7 @@ const shortenUrl = async () => {
 
   loading.value = true;
   try {
+    const clientUrl = 'http://localhost:5174';
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       {
@@ -153,17 +168,22 @@ const shortenUrl = async () => {
 
     const shortenedUrl = response.data["data"]["short_id"];
 
+    combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;
+    // This is the shortened URL that is to be saved to Firebase and visited by the user
+    console.log(combinedUrl.value)
+
     // Save the shortened link to Firebase
     const docRef = await addDoc(collection(db, "shortenedLinks"), {
       userId: auth.currentUser?.uid,
       originalUrl: originalUrl.value,
-      shortened_url: shortenedUrl,
+      shortened_url: combinedUrl.value,
     });
 
     // Update the local list of shortened links
     shortenedLinks.value.unshift({
       originalUrl: originalUrl.value,
-      shortened_url: shortenedUrl,
+      shortened_url: combinedUrl.value,
+      copied: false,
     });
 
     // Clear input fields
@@ -186,12 +206,12 @@ const shortenUrl = async () => {
     });
 };
 
-const copyToClipboard = (text: string, index) => {
+const copyToClipboard = (text: string, index: number) => {
   navigator.clipboard.writeText(text).then(() => {
     // Set the copied state of the link to true
-    // const index = shortenedLinks.value.findIndex(
-    //   (link) => link.shortened_url === text
-    // );
+    const index = shortenedLinks.value.findIndex(
+      (link) => link.shortened_url === text
+    );
     shortenedLinks.value[index].copied = true;
 
     // Reset the copied state after 2 seconds
@@ -205,7 +225,6 @@ const copyToClipboard = (text: string, index) => {
 
 const deleteLink = async (index: number) => {
   try {
-   
     const deletedLink = shortenedLinks.value[index];
     await deleteDoc(doc(db, "shortenedLinks", deletedLink.shortened_url)); // Delete from Firestore
 
@@ -213,7 +232,10 @@ const deleteLink = async (index: number) => {
     shortenedLinks.value.splice(index, 1);
 
     // Update local storage
-    localStorage.setItem("shortenedLinks", JSON.stringify(shortenedLinks.value));
+    localStorage.setItem(
+      "shortenedLinks",
+      JSON.stringify(shortenedLinks.value)
+    );
   } catch (error) {
     console.error("Error deleting link:", error);
     alert("Error deleting link. Please try again.");
@@ -221,9 +243,26 @@ const deleteLink = async (index: number) => {
   }
 };
 
+const generateQRCode = (text: string): string => {
+  const baseUrl = "http://api.qrserver.com/v1/create-qr-code/";
+  const encodedText = encodeURIComponent(text);
+  const size = "80x80"; // Adjust size as needed
+  return `${baseUrl}?data=${encodedText}&size=${size}`;
+};
+
 watchEffect(() => {
   localStorage.setItem("shortenedLinks", JSON.stringify(shortenedLinks.value));
 });
+
+const handleLogout = async () => {
+  try {
+    await signOut(getAuth());
+    localStorage.clear();
+    router.push("/");
+  } catch (error) {
+    console.log(error);
+  }
+};
 </script>
 
 <style scoped>

@@ -584,7 +584,7 @@ footer {
   .form {
    
     margin: 0 1rem;
-    background-image: url("/src/assets/bg-shorten-mobile.svg");
+    background-image: url("/src/assets//images/bg-shorten-mobile.svg");
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
@@ -709,7 +709,7 @@ footer {
     padding: 5rem 0.5rem;
     gap: 1rem;
     text-align: center;
-    background-image: url("/src/assets/bg-boost-mobile.svg");
+    background-image: url("/src/assets//images/bg-boost-mobile.svg");
   }
 
   .boost h2 {

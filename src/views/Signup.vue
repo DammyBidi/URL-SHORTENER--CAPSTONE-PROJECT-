@@ -73,7 +73,7 @@ const signupUser = async () => {
     // Redirect to dashboard after successful signup
     router.push("/dashboard");
   } catch (error) {
-    console.error("Error signing up:", error.message);
+    console.error("Error signing up:", error as any);
   }
 };
 
@@ -84,7 +84,7 @@ const signUpWithGoogle = async () => {
     // Redirect to dashboard after successful sign-up
     router.push("/dashboard");
   } catch (error) {
-    console.error("Error signing up with Google:", error.message);
+    console.error("Error signing up with Google:", error as any);
   }
 };
 </script>

@@ -12,9 +12,9 @@
         <router-link to="/login"> Login</router-link>
         <button><router-link to="/Signup">Sign up</router-link></button>
       </div>
-      <div class="mobile-nav-toggle" @click="toggleMobileNav">
-        <!-- <ion-icon name="menu-outline"></ion-icon> -->
-      </div>
+      <!-- <div class="mobile-nav-toggle" @click="toggleMobileNav">
+        <ion-icon name="menu-outline"></ion-icon>
+      </div> -->
     </nav>
 
     <header>
@@ -68,11 +68,12 @@
           <button type="submit">Shorten It!</button>
         </form>
       </div>
-      <div v-if="loading">Loading...</div>
+      
     </header>
 
     <div class="grey-bg">
       <div class="link-section">
+        <div v-if="loading">Loading...</div>
         <div v-if="shortenedLinks.length > 0">
           <div v-for="(link, index) in shortenedLinks" :key="index">
             <div class="link-container">
@@ -154,71 +155,8 @@
 
     <footer-bg />
 
-
-
-
-
-    <!-- <div class="footer-bg">
-      <footer>
-        <div class="footer-logo">
-          <h3>Shortly</h3>
-        </div>
-        <div class="footer-links">
-          <div class="footer-links-section">
-            <h3>Features</h3>
-            <a href="">Link Shortening</a>
-            <a href="">Branded Links</a>
-            <a href="">Analytics</a>
-          </div>
-          <div class="footer-links-section">
-            <h3>Resources</h3>
-            <a href="">Blog</a>
-            <a href="">Developers</a>
-            <a href="">Support</a>
-          </div>
-          <div class="footer-links-section">
-            <h3>Company</h3>
-            <a href="">About</a>
-            <a href="">Our Team</a>
-            <a href="">Careers</a>
-            <a href="">Contact</a>
-          </div>
-          <div class="footer-social">
-            <img
-              src="/src/assets//images/icon-facebook.svg"
-              alt="facebook icon"
-            />
-            <img
-              src="/src/assets//images/icon-twitter.svg"
-              alt="twitter icon"
-            />
-            <img
-              src="/src/assets//images/icon-pinterest.svg"
-              alt="pinterest icon"
-            />
-            <img
-              src="/src/assets//images/icon-instagram.svg"
-              alt="instagram icon"
-            />
-          </div>
-        </div>
-      </footer>
-    </div> -->
-
-    <!-- Display shortened links -->
-    <!-- <div v-if="shortenedLinks.length > 0">
-      <h3>Your Shortened Links</h3>
-      <ul>
-        <li v-for="link in shortenedLinks" :key="link.shortened_url">
-          <span>{{ link.originalUrl }}</span>
-          <span>{{ link.shortened_url }}</span>
-          <button @click="copyToClipboard(link.shortened_url)">Copy</button>
-        </li>
-      </ul>
-    </div> -->
-
     <!-- Display loading indicator while submitting the form -->
-    <div v-if="loading">Loading...</div>
+    <!-- <div v-if="loading">Loading...</div> -->
   </div>
 </template>
 
@@ -233,11 +171,13 @@ import footerBg from '../components/footer-bg.vue';
 const originalUrl = ref<string>("");
 const customUrl = ref<string>("");
 const shortenedLinks = ref<
-  Array<{ originalUrl: string; shortened_url: string }>
+  Array<{ originalUrl: string; shortened_url: string; copied: boolean }>
 >([]);
 const loading = ref<boolean>(false); // New loading indicator state
 const errorMessage = ref<string>("");
 const showMobileNav = ref<boolean>(false);
+// Store the client URL with the shortened ID in combineUrl 
+const combinedUrl = ref<string>("");
 const amountOfLinks = ref<number>(0);
 
 // Fetch data from local storage when the component is mounted
@@ -249,7 +189,7 @@ if (storedLinks) {
 
 const storedAmountOfLinks = localStorage.getItem("amountOfLinks");
 if (storedAmountOfLinks) {
-  amountOfLinks.value = storedAmountOfLinks;
+  amountOfLinks.value = parseInt(storedAmountOfLinks);
 }
 
 
@@ -270,9 +210,12 @@ const shortenUrl = async () => {
    return; }
 
    amountOfLinks.value += 1;
+    // Preferably save clientUrl in .env file and read from there
+   const clientUrl = 'http://localhost:5174';
+   loading.value = true;
 
   try {
-    loading.value = true;
+    
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       { url: originalUrl.value,
@@ -280,9 +223,13 @@ const shortenUrl = async () => {
     }
     );
 
-    // console.log(response.data["data"]["short_id"]);
+    console.log(response.data["data"]["short_id"]);
 
     const shortenedUrl = response.data["data"]["short_id"];
+
+    combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;
+    // This is the shortened URL that is to be saved to Firebase and visited by the user
+    console.log(combinedUrl.value)
 
     // const shortenedUrl =
     //   customUrl.value ||
@@ -298,13 +245,14 @@ const shortenUrl = async () => {
     const docRef = await addDoc(collection(db, "shortenedLinks"), {
       userId: auth.currentUser?.uid,
       originalUrl: originalUrl.value,
-      shortened_url: shortenedUrl,
+      shortened_url: combinedUrl.value,                     
     });
 
     // Update the local list of shortened links
     shortenedLinks.value.unshift({
       originalUrl: originalUrl.value,
-      shortened_url: shortenedUrl,
+      shortened_url: combinedUrl.value,
+      copied: false
     });
 
     // Clear input fields
@@ -327,29 +275,31 @@ const shortenUrl = async () => {
     });
 };
 
-const copyToClipboard = (text: string, index) => {
+const copyToClipboard = (text: string, index: number) => {
   navigator.clipboard.writeText(text).then(() => {
     // Set the copied state of the link to true
-    // const index = shortenedLinks.value.findIndex(
-    //   (link) => link.shortened_url === text
-    // );
+    const index = shortenedLinks.value.findIndex(
+      (link) => link.shortened_url === text
+    );
     shortenedLinks.value[index].copied = true;
 
     // Reset the copied state after 2 seconds
     setTimeout(() => {
       shortenedLinks.value[index].copied = false;
     }, 2000);
+  }).catch((error) => {
+    console.error('Error copying to clipboard:', error);
   });
 };
 
-const toggleMobileNav = () => {
-  showMobileNav.value = !showMobileNav.value;
-};
+// const toggleMobileNav = () => {
+//   showMobileNav.value = !showMobileNav.value;
+// };
 
 // Watch for changes in shortenedLinks and update local storage accordingly
 watchEffect(() => {
   localStorage.setItem("shortenedLinks", JSON.stringify(shortenedLinks.value));
-  localStorage.setItem("amountOfLinks",amountOfLinks.value);
+  localStorage.setItem("amountOfLinks", amountOfLinks.value.toString());
 });
 </script>
 

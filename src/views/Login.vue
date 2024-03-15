@@ -70,7 +70,7 @@ const loginUser = async () => {
     // Redirect to dashboard after successful login
     router.push("/dashboard");
   } catch (error) {
-    console.error("Error logging in:", error.message);
+    console.error("Error logging in:", error as any);
   }
 };
 
@@ -81,7 +81,7 @@ const loginWithGoogle = async () => {
     // Redirect to dashboard after successful login
     router.push("/dashboard");
   } catch (error) {
-    console.error("Error logging in with Google:", error.message);
+    console.error("Error logging in with Google:", error as any);
   }
 };
 </script>
