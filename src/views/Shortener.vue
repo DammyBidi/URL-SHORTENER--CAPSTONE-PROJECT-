@@ -10,11 +10,11 @@
       </div>
       <div class="login">
         <router-link to="/login"> Login</router-link>
-        <button><router-link to="/Signup">Sign up</router-link></button>
+        <router-link to="/Signup"><button>Sign Up</button></router-link>
       </div>
-      <!-- <div class="mobile-nav-toggle" @click="toggleMobileNav">
-        <ion-icon name="menu-outline"></ion-icon>
-      </div> -->
+      <div class="mobile-nav-toggle" @click="toggleMobileNav">
+        <img src="/src/assets/images/menu.png" alt="Menu logo">
+      </div>
     </nav>
 
     <header>
@@ -27,8 +27,8 @@
         </div>
         <hr />
         <div class="mobile-login">
-          <a href="">Login</a>
-          <button>Sign Up</button>
+          <router-link to="/login"> Login</router-link>
+          <router-link to="/Signup"><button>Sign Up</button></router-link>
         </div>
       </div>
       <div class="hero">
@@ -38,7 +38,7 @@
             Build your brand's recognition and get detailed insights on how your
             links are performing.
           </p>
-          <button>Get Started</button>
+          <router-link to="/Signup"><button>Get Started</button></router-link>
         </div>
         <div class="image">
           <img
@@ -47,6 +47,7 @@
           />
         </div>
       </div>
+      
       <div class="form">
         <form @submit.prevent="shortenUrl">
           <div class="input-container">
@@ -150,7 +151,7 @@
 
     <div class="boost">
       <h2>Boost your links today</h2>
-      <button>Get Started</button>
+      <router-link to="/Signup"><button>Get Started</button></router-link>
     </div>
 
     <footer-bg />
@@ -161,13 +162,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
+import { ref, onMounted,  watchEffect } from "vue";
 import axios from "axios";
+import { useRouter } from "vue-router";
 import { auth, db } from "../firebase";
-import { addDoc, collection } from "firebase/firestore";
+// import { addDoc, collection } from "firebase/firestore";
 import footerBg from '../components/footer-bg.vue';
 // import { getFirestore } from 'firebase/firestore';
 
+
+
+
+
+const router = useRouter();
 const originalUrl = ref<string>("");
 const customUrl = ref<string>("");
 const shortenedLinks = ref<
@@ -207,46 +214,45 @@ const shortenUrl = async () => {
  if(amountOfLinks.value > 9){
    errorMessage.value = "You have reached the maximum amount of links";
    alert("You have reached the maximum amount of links");
-   return; }
+   return; 
+  }
 
-   amountOfLinks.value += 1;
-    // Preferably save clientUrl in .env file and read from there
-   const clientUrl = 'http://localhost:5174';
-   loading.value = true;
+  amountOfLinks.value += 1;
+  loading.value = true;
 
   try {
-    
+    const clientUrl = 'http://localhost:5173';
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
-      { url: originalUrl.value,
-      // customUrl: customUrl.value
-    }
+      { url: originalUrl.value }, 
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+
     );
-
-    console.log(response.data["data"]["short_id"]);
-
     const shortenedUrl = response.data["data"]["short_id"];
 
     combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;
     // This is the shortened URL that is to be saved to Firebase and visited by the user
-    console.log(combinedUrl.value)
+    console.log(combinedUrl.value);
 
-    // const shortenedUrl =
-    //   customUrl.value ||
-    //   (
-    //     await axios.post(
-    //       `https://tinyurl.com/api-create.php?url=${encodeURIComponent(
-    //         originalUrl.value
-    //       )}`
-    //     )
-    //   ).data;
+   
 
     // Save the shortened link to Firebase
-    const docRef = await addDoc(collection(db, "shortenedLinks"), {
-      userId: auth.currentUser?.uid,
-      originalUrl: originalUrl.value,
-      shortened_url: combinedUrl.value,                     
-    });
+
+        // Save the shortened link to Firebase
+    //     const userId = auth.currentUser?.uid; // Get the userId from Firebase authentication
+    // if (!userId) {
+    //   throw new Error("User ID is not available");
+    // }
+
+    // const docRef = await addDoc(collection(db, "shortenedLinks"), {
+    //   userId: auth.currentUser?.uid,
+    //   originalUrl: originalUrl.value,
+    //   shortened_url: combinedUrl.value,                     
+    // });
 
     // Update the local list of shortened links
     shortenedLinks.value.unshift({
@@ -266,13 +272,13 @@ const shortenUrl = async () => {
     loading.value = false;
   }
 
-  addDoc(collection(db, "your-collection"), {})
-    .then((docRef) => {
-      console.log("Document written with ID: ", docRef.id);
-    })
-    .catch((error) => {
-      console.error("Error adding document: ", error);
-    });
+  // addDoc(collection(db, "your-collection"), {})
+  //   .then((docRef) => {
+  //     console.log("Document written with ID: ", docRef.id);
+  //   })
+  //   .catch((error) => {
+  //     console.error("Error adding document: ", error);
+  //   });
 };
 
 const copyToClipboard = (text: string, index: number) => {
@@ -292,9 +298,9 @@ const copyToClipboard = (text: string, index: number) => {
   });
 };
 
-// const toggleMobileNav = () => {
-//   showMobileNav.value = !showMobileNav.value;
-// };
+const toggleMobileNav = () => {
+  showMobileNav.value = !showMobileNav.value;
+};
 
 // Watch for changes in shortenedLinks and update local storage accordingly
 watchEffect(() => {

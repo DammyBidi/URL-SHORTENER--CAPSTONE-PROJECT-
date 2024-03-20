@@ -6,7 +6,10 @@
   box-sizing: border-box;
 }
 
+a {
+  text-decoration: none;
 
+}
 
 nav {
   display: flex;
@@ -44,6 +47,10 @@ nav {
   display: flex;
   align-items: center;
   gap: 2rem;
+}
+
+.login button a {
+  color: white;
 }
 
 .login button {
@@ -103,6 +110,11 @@ button:hover  {
   font-weight: 400;
   font-family: Poppins;
   cursor: pointer;
+}
+
+.hero .text button a {
+  color: white;
+
 }
 
 .hero .image img {
@@ -209,9 +221,9 @@ form {
   padding: 1.5rem;
   background-color: white;
   border-radius: 0.5rem;
-  overflow-wrap: break-word;
+  /* overflow-wrap: break-word;
   word-wrap: break-word;
-  overflow: hidden;
+  overflow: hidden; */
 }
 
 .original-link {
@@ -220,7 +232,11 @@ form {
   font-family: Poppins;
   font-size: 1.3rem;
   font-weight: 400;
-  overflow-wrap: break-word;
+  /* overflow-wrap: break-word; */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
   
   /* word-wrap: break-word; */
 }
@@ -228,8 +244,11 @@ form {
 .short-link {
   display: flex;
   align-items: center;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
+  /* overflow-wrap: break-word;
+  word-wrap: break-word; */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .short-link span {
@@ -238,6 +257,9 @@ form {
   font-family: Poppins;
   font-size: 1.3rem;
   font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .short-link button {
@@ -371,7 +393,7 @@ form {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  padding: 2rem 1.5rem;
+  padding: 5rem 1.5rem;
   gap: 1rem;
 }
 
@@ -459,6 +481,7 @@ footer {
     
     margin: 2rem 1rem;
     justify-content: space-between;
+    
   }
 
  
@@ -479,6 +502,7 @@ footer {
     
     border-radius: 0.5rem;
     position: absolute;
+    
     left: 0;
     right: 0;
     top: 0;
@@ -529,11 +553,7 @@ footer {
 
 
   
-  ion-icon {
-    font-size: 64px;
-    color: hsl(0, 0%, 69%);
-   
-  }
+
 
 
   .links a,.login {

@@ -5,57 +5,64 @@
       <div class="nav-logo">
         <h3>Shortly</h3>
       </div>
-      <div>
-        <p>Welcome Gideon</p>
-        <button @click="handleLogout" >Signout</button>
+      <div class="user-details">
+        <div class="user-image">
+          <!-- Conditional rendering for the user's profile picture -->
+          <img :src="userProfilePicture || defaultProfilePicture" alt="" />
+        </div>
+        <div>
+          <p>Welcome {{ userFirstName }}</p>
+          <button @click="handleLogout">Signout</button>
+        </div>
       </div>
     </nav>
+    <div class="bg-color">
+      <div class="background-image1">
+        <form @submit.prevent="shortenUrl">
+          <div class="form">
+            <div>
+              <input
+                class="input1"
+                type="url"
+                v-model="originalUrl"
+                name="url-input"
+                placeholder="Paste URL here"
+                :class="{ 'error-input': errorMessage }"
+                :style="{
+                  borderColor: errorMessage ? 'hsl(0, 87%, 67%)' : '',
+                  color: errorMessage ? 'hsl(0, 87%, 67%)' : '',
+                }"
+              />
+              <label v-if="errorMessage" class="error-message" for="url-input">
+                <i> {{ errorMessage }} </i>
+              </label>
+            </div>
 
-    <div class="background-image1">
-      <form @submit.prevent="shortenUrl">
-        <div class="form">
-          <div>
-            <input
-              class="input1"
-              type="url"
-              v-model="originalUrl"
-              name="url-input"
-              placeholder="Paste URL here"
-              :class="{ 'error-input': errorMessage }"
-              :style="{
-                borderColor: errorMessage ? 'hsl(0, 87%, 67%)' : '',
-                color: errorMessage ? 'hsl(0, 87%, 67%)' : '',
-              }"
-            />
-            <label v-if="errorMessage" class="error-message" for="url-input">
-              <i> {{ errorMessage }} </i>
-            </label>
+            <div class="custom-input">
+              <select name="" id="">
+                <option value="">Shortly</option>
+              </select>
+              <input
+                class="input2"
+                type="text"
+                v-model="customUrl"
+                name="name"
+                placeholder="Custom back-half (optional)"
+              />
+            </div>
+            <button type="submit">
+              Shorten It <img src="../assets/images/magic wand.png" alt="" />
+            </button>
+            <p>
+              By clicking Shorten It, I agree to the
+              <span>Terms of Service,</span> <span>Privacy Policy</span> and Use
+              of Cookies.
+            </p>
           </div>
+        </form>
+      </div>
 
-          <div class="custom-input">
-            <select name="" id="">
-              <option value="">Choose Domain</option>
-            </select>
-            <input
-              class="input2"
-              type="text"
-              v-model="customUrl"
-              name="name"
-              placeholder="Custom URL (optional)"
-            />
-          </div>
-          <button type="submit">
-            Shorten It <img src="../assets/images/magic wand.png" alt="" />
-          </button>
-          <p>
-            By clicking TrimURL, I agree to the <span>Terms of Service,</span>
-            <span>Privacy Policy</span> and Use of Cookies.
-          </p>
-        </div>
-      </form>
-    </div>
-
-    <div class="grey-bg">
+      <!-- <div class="grey-bg"> -->
       <div class="link-section">
         <div class="link-title">
           <h2>My Recent URLs</h2>
@@ -75,6 +82,9 @@
             </div>
           </div>
           <div v-if="shortenedLinks.length > 0">
+            <div class="loading" v-if="loading">
+              <p>Please wait your link is loading.....</p>
+            </div>
             <div v-for="(link, index) in shortenedLinks" :key="index">
               <div class="links">
                 <div class="left1">
@@ -107,7 +117,43 @@
             </div>
           </div>
         </div>
+
+        <!-- Mobile link section -->
+        <div class="Mobile-Link-Container">
+          <div v-if="shortenedLinks.length > 0">
+            <div class="loading" v-if="loading">
+              <p>Please wait your link is loading.....</p>
+            </div>
+            <div v-for="(link, index) in shortenedLinks" :key="index">
+              <div class="Mobile-links">
+                <p class="mobile-short">{{ link.shortened_url }}</p>
+                <p>{{ link.originalUrl }}</p>
+                <div class="qrcodeimage">
+                  <img
+                    :src="generateQRCode(link.shortened_url)"
+                    alt="QR Code"
+                  />
+                </div>
+                <p>Clicks: 12</p>
+                <p>Location: Us</p>
+                <p>Date: oct-12-2024</p>
+                <hr />
+                <div class="Mobile-action">
+                  <button
+                    @click="copyToClipboard(link.shortened_url, index)"
+                    :class="{ 'violet-button': link.copied }"
+                  >
+                    {{ link.copied ? "Copied!" : "Copy" }}
+                  </button>
+                  <button @click="deleteLink(index)">Delete</button>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+      <!-- </div> -->
     </div>
 
     <footer-bg />
@@ -118,15 +164,18 @@
 
 <script setup lang="ts">
 // import footerBg from "../components/footer-bg.vue";
-import { ref, watchEffect } from "vue";
+import { ref, onMounted, watchEffect } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
 import { auth, db } from "../firebase";
-import { signOut, getAuth } from "firebase/auth";
+import { signOut, getAuth, User } from "firebase/auth";
 import { addDoc, collection, deleteDoc, doc } from "firebase/firestore";
-import footerBg from '../components/footer-bg.vue';
+import footerBg from "../components/footer-bg.vue";
 
 const router = useRouter();
+const userProfilePicture = ref<string | null>(null);
+const defaultProfilePicture = "/src/assets/images/default-profile-picture.jpeg"; // Default profile picture URL
+const userFirstName = ref<string>("");
 const originalUrl = ref<string>("");
 const customUrl = ref<string>("");
 const shortenedLinks = ref<
@@ -135,7 +184,7 @@ const shortenedLinks = ref<
 const loading = ref<boolean>(false); // New loading indicator state
 const errorMessage = ref<string>("");
 const showMobileNav = ref<boolean>(false);
-// Store the client URL with the shortened ID in combineUrl 
+// Store the client URL with the shortened ID in combineUrl
 const combinedUrl = ref<string>("");
 
 const storedLinks = localStorage.getItem("shortenedLinks");
@@ -143,20 +192,36 @@ if (storedLinks) {
   shortenedLinks.value = JSON.parse(storedLinks);
 }
 
-const shortenUrl =  async () => {
+const shortenUrl = async () => {
   errorMessage.value = "";
+
+  const normalizedUrl = originalUrl.value.trim().toLowerCase();
   if (!originalUrl.value.trim()) {
     errorMessage.value = "Please enter a valid URL";
+    return;
+  }
+  // Check if the URL has already been shortened
+  const existingLinkIndex = shortenedLinks.value.findIndex(
+    (link) => link.originalUrl.toLowerCase() === normalizedUrl
+  );
+  if (existingLinkIndex !== -1) {
+    // URL already exists in the list, provide feedback
+    const existingShortenedUrl =
+      shortenedLinks.value[existingLinkIndex].shortened_url;
+    alert(
+      `This URL has already been shortened:\n${existingShortenedUrl}, Please check your list of shortened URLs.`
+    );
     return;
   }
 
   loading.value = true;
   try {
-    const clientUrl = 'http://localhost:5174';
+    const clientUrl = "http://localhost:5173";
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       {
         url: originalUrl.value,
+        slug: customUrl.value.trim(), // Include the custom slug in the payload
         domain: "shrtco.de",
       },
       {
@@ -170,7 +235,7 @@ const shortenUrl =  async () => {
 
     combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;
     // This is the shortened URL that is to be saved to Firebase and visited by the user
-    console.log(combinedUrl.value)
+    console.log(combinedUrl.value);
 
     // Save the shortened link to Firebase
     const docRef = await addDoc(collection(db, "shortenedLinks"), {
@@ -223,10 +288,16 @@ const copyToClipboard = (text: string, index: number) => {
 
 // Watch for changes in shortenedLinks and update local storage accordingly
 
+//
+
 const deleteLink = async (index: number) => {
   try {
     const deletedLink = shortenedLinks.value[index];
-    await deleteDoc(doc(db, "shortenedLinks", deletedLink.shortened_url)); // Delete from Firestore
+    const documentId = deletedLink.shortened_url.split("/").pop(); // Extract document ID from shortened URL
+    if (!documentId) {
+      throw new Error("Invalid document ID");
+    }
+    await deleteDoc(doc(collection(db, "shortenedLinks"), documentId)); // Delete from Firestore
 
     // Remove the link from the local array
     shortenedLinks.value.splice(index, 1);
@@ -239,7 +310,6 @@ const deleteLink = async (index: number) => {
   } catch (error) {
     console.error("Error deleting link:", error);
     alert("Error deleting link. Please try again.");
-    return;
   }
 };
 
@@ -254,10 +324,34 @@ watchEffect(() => {
   localStorage.setItem("shortenedLinks", JSON.stringify(shortenedLinks.value));
 });
 
+// Function to fetch user data and update reactive variables
+const fetchUserData = () => {
+  const user = auth.currentUser;
+  if (user) {
+    // Check if the user has a profile picture URL
+    if (user.photoURL) {
+      userProfilePicture.value = user.photoURL;
+    } else {
+      userProfilePicture.value = defaultProfilePicture; // Set default profile picture
+    }
+    // Set the user's name (if available) or email address
+    userFirstName.value = getFirstName(user.displayName ?? user.email ?? "");
+  }
+};
+
+// Function to extract the first name from the display name or email address
+const getFirstName = (fullName: string): string => {
+  // Split the full name by whitespace
+  const names = fullName.split(" ");
+  // Return the first name (if available)
+  return names[0];
+};
+
+onMounted(fetchUserData);
+
 const handleLogout = async () => {
   try {
     await signOut(getAuth());
-    localStorage.clear();
     router.push("/");
   } catch (error) {
     console.log(error);

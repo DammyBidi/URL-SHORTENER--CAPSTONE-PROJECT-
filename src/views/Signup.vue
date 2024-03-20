@@ -41,15 +41,14 @@
     <div class="right">
       <div class="image">
         <div class="img-div">
-          <img src="../assets/images/login-illustration.jpg" alt="login" />
+          <img src="../assets/images/signupimage.jpg" alt="login" />
         </div>
         <h3>
-          Easily analyze links and QR codes just as effortlessly as you create
-          them
+          Utilize Shortly's Connections Platform to enhance the capabilities of
+          your links, QR Codes, and Link-in-bio.
         </h3>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -90,5 +89,5 @@ const signUpWithGoogle = async () => {
 </script>
 
 <style scoped>
-@import "../assets/styles/login.css";
+@import "../assets/styles/signup.css";
 </style>
