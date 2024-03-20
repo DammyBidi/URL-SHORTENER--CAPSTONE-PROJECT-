@@ -106,9 +106,9 @@
                       alt="QR Code"
                     />
                   </div>
-                  <p>12</p>
-                  <p>Us</p>
-                  <p>oct-12-2024</p>
+                  <p>1</p>
+                  <p>Nigeria</p>
+                  <p>{{ link.date }}</p>
                   <div>
                     <button @click="deleteLink(index)">Delete</button>
                   </div>
@@ -134,9 +134,9 @@
                     alt="QR Code"
                   />
                 </div>
-                <p>Clicks: 12</p>
-                <p>Location: Us</p>
-                <p>Date: oct-12-2024</p>
+                <p>Clicks: 1</p>
+                <p>Location: Nigeria</p>
+                <p>Date:{{ link.date }}</p>
                 <hr />
                 <div class="Mobile-action">
                   <button
@@ -179,7 +179,7 @@ const userFirstName = ref<string>("");
 const originalUrl = ref<string>("");
 const customUrl = ref<string>("");
 const shortenedLinks = ref<
-  Array<{ originalUrl: string; shortened_url: string; copied: boolean }>
+  Array<{ originalUrl: string; shortened_url: string; copied: boolean; date: string; }>
 >([]);
 const loading = ref<boolean>(false); // New loading indicator state
 const errorMessage = ref<string>("");
@@ -232,6 +232,9 @@ const shortenUrl = async () => {
     );
 
     const shortenedUrl = response.data["data"]["short_id"];
+    const created_at = response.data["data"]["created_at"];
+    const currentDate = new Date(created_at).toLocaleDateString(); // Convert the created_at date to a human-readable format
+
 
     combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;
     // This is the shortened URL that is to be saved to Firebase and visited by the user
@@ -242,6 +245,7 @@ const shortenUrl = async () => {
       userId: auth.currentUser?.uid,
       originalUrl: originalUrl.value,
       shortened_url: combinedUrl.value,
+      date: currentDate,
     });
 
     // Update the local list of shortened links
@@ -249,6 +253,7 @@ const shortenUrl = async () => {
       originalUrl: originalUrl.value,
       shortened_url: combinedUrl.value,
       copied: false,
+      date: currentDate,
     });
 
     // Clear input fields
