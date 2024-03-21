@@ -57,7 +57,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth } from "../utils/firebase";
 import { useRouter } from "vue-router";
 
 const email = ref<string>("");
@@ -89,3 +89,4 @@ const loginWithGoogle = async () => {
 <style scoped>
 @import "../assets/styles/login.css";
 </style>
+../utils/firebase

@@ -1,5 +1,5 @@
 // src/router.ts
-import { auth } from './firebase'; // Replace with the correct path to your firebase configuration file
+import { auth } from './utils/firebase'; // Replace with the correct path to your firebase configuration file
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import Shortener from './views/Shortener.vue';
 import Login from './views/Login.vue';

@@ -164,11 +164,11 @@
 </template>
 
 <script setup lang="ts">
-// import footerBg from "../components/footer-bg.vue";
+
 import { ref, onMounted, watchEffect } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
-import { auth, db, analytics } from "../firebase";
+import { auth, db, analytics } from "../utils/firebase";
 import { signOut, getAuth, User } from "firebase/auth";
 import { addDoc, collection, deleteDoc, doc } from "firebase/firestore";
 import footerBg from "../components/footer-bg.vue";
@@ -216,13 +216,12 @@ const shortenUrl = async () => {
 
   loading.value = true;
   try {
-    const clientUrl = "sshortly.netlify.app";
+    const clientUrl = "s-h.netlify.app";
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       {
         url: originalUrl.value,
         slug: customUrl.value.trim(), // Include the custom slug in the payload
-        domain: "shrtco.de",
       },
       {
         headers: {
@@ -373,3 +372,4 @@ const handleLogout = async () => {
 @import "../assets/styles/dashboard.css";
 
 </style>
+../utils/firebase
