@@ -47,6 +47,7 @@
           />
         </div>
       </div>
+      <div class="warning"><p>You can only create 02 links here. Signup or login to get the full features of this app</p></div>
       
       <div class="form">
         <form @submit.prevent="shortenUrl">
@@ -75,8 +76,8 @@
     <div class="grey-bg">
       <div class="link-section">
         <div v-if="loading">Loading...</div>
-        <div v-if="shortenedLinks.length > 0">
-          <div v-for="(link, index) in shortenedLinks" :key="index">
+        <div v-if="lastTwoShortenedLinks.length > 0">
+          <div v-for="(link, index) in lastTwoShortenedLinks" :key="index">
             <div class="link-container">
               <div class="original-link">{{ link.originalUrl }}</div>
               <div class="short-link">
@@ -180,6 +181,7 @@ const customUrl = ref<string>("");
 const shortenedLinks = ref<
   Array<{ originalUrl: string; shortened_url: string; copied: boolean }>
 >([]);
+const lastTwoShortenedLinks = ref<Array<{ originalUrl: string; shortened_url: string; copied: boolean }>>([]);
 const loading = ref<boolean>(false); // New loading indicator state
 const errorMessage = ref<string>("");
 const showMobileNav = ref<boolean>(false);
@@ -199,6 +201,14 @@ if (storedAmountOfLinks) {
   amountOfLinks.value = parseInt(storedAmountOfLinks);
 }
 
+const updateLastTwoShortenedLinks = () => {
+  if (shortenedLinks.value.length > 2) {
+    lastTwoShortenedLinks.value = shortenedLinks.value.slice(-2);
+  } else {
+    lastTwoShortenedLinks.value = shortenedLinks.value;
+  }
+};
+
 
 const shortenUrl = async () => {
   errorMessage.value = "";
@@ -211,9 +221,9 @@ const shortenUrl = async () => {
   // Set loading to true before starting the asynchronous operation
   
 
- if(amountOfLinks.value > 9){
-   errorMessage.value = "You have reached the maximum amount of links";
-   alert("You have reached the maximum amount of links");
+ if(amountOfLinks.value > 2){
+   errorMessage.value = "You have reached the maximum amount of links allowed please signup or login to get more links";
+   alert("You have reached the maximum amount of links allowed please signup or login to get more links");
    return; 
   }
 
@@ -307,6 +317,8 @@ watchEffect(() => {
   localStorage.setItem("shortenedLinks", JSON.stringify(shortenedLinks.value));
   localStorage.setItem("amountOfLinks", amountOfLinks.value.toString());
 });
+
+watchEffect(updateLastTwoShortenedLinks);
 </script>
 
 <style scoped>

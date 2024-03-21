@@ -133,7 +133,25 @@ header {
   background-color: hsl(0, 0%, 95%);
 }
 
+.warning {
+  margin: 0 5rem;
+  position: absolute;
+  right: 0;
+  left: 0;
+  bottom: -4.7rem;
+ 
+}
+
+.warning p {
+  font-size: 1.5rem;
+  color: hsl(0, 0%, 55%);
+  font-weight: 400;
+  font-family: Poppins;
+  text-align: center;
+}
+
 .form {
+  /* display: none; */
   background-color: hsl(257, 27%, 26%);
   background-image: url("/src/assets//images/bg-shorten-desktop.svg");
   background-position: center;
@@ -232,13 +250,14 @@ form {
   font-family: Poppins;
   font-size: 1.3rem;
   font-weight: 400;
-  /* overflow-wrap: break-word; */
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  /* white-space: nowrap; */
   overflow: hidden;
   text-overflow: ellipsis;
+  
 
   
-  /* word-wrap: break-word; */
+  word-wrap: break-word;
 }
 
 .short-link {
@@ -601,6 +620,16 @@ footer {
     width: 100%;
   }
 
+  .warning {
+    margin: 0 1rem;
+    bottom: -6.3rem;
+  }
+
+  .warning p {
+    font-size: 1rem;
+    text-align: left;
+  }
+
   .form {
    
     margin: 0 1rem;
@@ -652,6 +681,12 @@ footer {
     
   }
 
+  .original-link {
+   
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
  
 
   .short-link {

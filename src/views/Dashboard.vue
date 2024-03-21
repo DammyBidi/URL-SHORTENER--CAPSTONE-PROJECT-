@@ -89,7 +89,7 @@
               <div class="links">
                 <div class="left1">
                   <div class="sl">
-                    <p>{{ link.shortened_url }}</p>
+                    <p class="des-shortlink">{{ link.shortened_url }}</p>
                     <button
                       @click="copyToClipboard(link.shortened_url, index)"
                       :class="{ 'violet-button': link.copied }"
@@ -136,7 +136,7 @@
                 </div>
                 <p>Clicks: 1</p>
                 <p>Location: Nigeria</p>
-                <p>Date:{{ link.date }}</p>
+                <p>Date: {{ link.date }}</p>
                 <hr />
                 <div class="Mobile-action">
                   <button
@@ -155,6 +155,7 @@
       </div>
       <!-- </div> -->
     </div>
+    
 
     <footer-bg />
 
@@ -167,7 +168,7 @@
 import { ref, onMounted, watchEffect } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
-import { auth, db } from "../firebase";
+import { auth, db, analytics } from "../firebase";
 import { signOut, getAuth, User } from "firebase/auth";
 import { addDoc, collection, deleteDoc, doc } from "firebase/firestore";
 import footerBg from "../components/footer-bg.vue";
@@ -183,7 +184,6 @@ const shortenedLinks = ref<
 >([]);
 const loading = ref<boolean>(false); // New loading indicator state
 const errorMessage = ref<string>("");
-const showMobileNav = ref<boolean>(false);
 // Store the client URL with the shortened ID in combineUrl
 const combinedUrl = ref<string>("");
 
@@ -291,6 +291,10 @@ const copyToClipboard = (text: string, index: number) => {
   });
 };
 
+
+
+
+
 // Watch for changes in shortenedLinks and update local storage accordingly
 
 //
@@ -367,4 +371,5 @@ const handleLogout = async () => {
 <style scoped>
 /* Add your styles for the dashboard page here */
 @import "../assets/styles/dashboard.css";
+
 </style>

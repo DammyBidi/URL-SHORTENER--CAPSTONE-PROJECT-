@@ -286,12 +286,15 @@ nav {
   font-weight: 600;
 }
 
+.des-shortlink {
+  color: hsl(180, 66%, 49%);
+}
+
 .sl {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
-
 
 .sl button {
   background-color: hsl(180, 66%, 49%);
@@ -412,7 +415,6 @@ nav {
     flex-direction: column;
     gap: 1rem;
     margin-top: 1rem;
-    
   }
 
   .Mobile-links {
@@ -422,11 +424,9 @@ nav {
     margin-bottom: 1.5rem;
   }
 
-  .mobile-short{
+  .mobile-short {
     color: hsl(180, 66%, 49%);
   }
-
-
 
   .Mobile-links p {
     font-size: 1rem;
