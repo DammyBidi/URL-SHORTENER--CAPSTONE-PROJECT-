@@ -8,8 +8,9 @@
   ## Not needed for static site generators.
   [[redirects]]
     from = "/*"
-    to = "/index.html"
-    status = 200
+    to = "/403.html"
+    status = 403
+    force = true
 
   ## (optional) Settings for Netlify Dev
   ## https://github.com/netlify/cli/blob/main/docs/netlify-dev.md#project-detection
