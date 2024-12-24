@@ -166,7 +166,7 @@
 import { ref, onMounted,  watchEffect } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
-import { auth, db } from "../utils/firebase";
+import { auth, db } from "../firebase";
 // import { addDoc, collection } from "firebase/firestore";
 import footerBg from '../components/footer-bg.vue';
 // import { getFirestore } from 'firebase/firestore';
@@ -231,7 +231,7 @@ const shortenUrl = async () => {
   loading.value = true;
 
   try {
-    const clientUrl = 's-h.netlify.app';
+    const clientUrl = 'sshortly.netlify.app';
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       { url: originalUrl.value }, 
@@ -324,4 +324,3 @@ watchEffect(updateLastTwoShortenedLinks);
 <style scoped>
 @import "../assets/styles/Shortener.css";
 </style>
-../utils/firebase
