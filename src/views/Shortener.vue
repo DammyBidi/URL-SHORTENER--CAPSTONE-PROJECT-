@@ -232,20 +232,31 @@ const shortenUrl = async () => {
 
   try {
     const clientUrl = 'sshortly.netlify.app';
-    const response = await axios.post(
+    const response = await fetch(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
-      { url: originalUrl.value }, 
       {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          url: originalUrl.value,
+          customUrl: customUrl.value,
+        }),
       }
 
     );
-    const shortenedUrl = response.data["data"]["short_id"];
+
+    if (!response.ok) {
+      throw new Error("Failed to shorten URL");
+    }
+    
+
+    const data = await response.json();
+    const shortenedUrl = data.shortenedUrl;
+
 
     combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;
-    // This is the shortened URL that is to be saved to Firebase and visited by the user
     console.log(combinedUrl.value);
 
    

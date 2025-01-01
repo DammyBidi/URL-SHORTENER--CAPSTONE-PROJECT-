@@ -166,7 +166,7 @@
 <script setup lang="ts">
 // import footerBg from "../components/footer-bg.vue";
 import { ref, onMounted, watchEffect } from "vue";
-import axios from "axios";
+// import axios from "axios";
 import { useRouter } from "vue-router";
 import { auth, db, analytics } from "../firebase";
 import { signOut, getAuth, User } from "firebase/auth";
@@ -217,23 +217,29 @@ const shortenUrl = async () => {
   loading.value = true;
   try {
     const clientUrl = "sshortly.netlify.app";
-    const response = await axios.post(
+    const response = await fetch(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       {
-        url: originalUrl.value,
-        slug: customUrl.value.trim(), // Include the custom slug in the payload
-        domain: "shrtco.de",
-      },
-      {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          url: originalUrl.value,
+          slug: customUrl.value.trim(),
+          domain: "shrtco.de",
+        }),
       }
     );
 
-    const shortenedUrl = response.data["data"]["short_id"];
-    const created_at = response.data["data"]["created_at"];
-    const currentDate = new Date(created_at).toLocaleDateString(); // Convert the created_at date to a human-readable format
+    if (!response.ok) {
+      throw new Error("Failed to shorten the URL");
+    }
+
+    const data = await response.json();
+    const shortenedUrl = data.data.short_id;
+    const created_at = data.data.created_at;
+    const currentDate = new Date(created_at).toLocaleDateString();
 
 
     combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;

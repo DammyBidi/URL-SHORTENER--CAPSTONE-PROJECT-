@@ -8,7 +8,7 @@
   <script setup lang="ts">
   import { ref, onMounted } from "vue";
   import { useRouter, useRoute } from 'vue-router';
-  import axios from 'axios';
+  // import axios from 'axios';
   
   const router = useRouter();
   const route = useRoute();
@@ -21,10 +21,17 @@
     try {
       loading.value = true; // Set loading indicator
       console.log('shortenedId<<<<< ' , shortenedId);
-      const response = await axios.get(`https://url-shortener-qnn7.onrender.com/api/v1/${shortenedId}`); // Adjust API endpoint path
-  
-      console.log("Response: " + response.data["data"]["original_url"]);
-      const originalUrl = response.data["data"]["original_url"]
+
+      const response = await fetch(`https://url-shortener-qnn7.onrender.com/api/v1/${shortenedId}`); // Adjust API endpoint path
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Response: ", data["data"]["original_url"]);
+      const originalUrl = data["data"]["original_url"];
+
       window.location.href = originalUrl;
     } catch (error) {
       console.error("Error fetching original URL:", error);
