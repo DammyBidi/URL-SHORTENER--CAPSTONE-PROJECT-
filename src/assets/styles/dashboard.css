@@ -280,6 +280,77 @@ nav {
   font-family: Poppins;
 }
 
+/* QR block styling: keep QR image and a small download icon to the right */
+.qr-block {
+  display: inline-block;
+  position: relative; /* contain absolutely-positioned button */
+  width: 80px;
+  height: 80px;
+}
+.qr-block img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 4px;
+}
+.qr-actions {
+  position: absolute;
+  right: -24px;
+  bottom: -3px;
+}
+.qr-actions button {
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.08);
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.qr-actions button:hover {
+  background-color: rgba(255,255,255,1);
+}
+
+/* Mobile QR actions (small icon positioned right of image) */
+.qrcodeimage {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.qrcodeimage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.qr-actions-mobile {
+  position: absolute;
+  right: -28px;
+  bottom: -4px;
+}
+.qr-actions-mobile button {
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.08);
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.qr-actions-mobile button:hover {
+  background-color: rgba(255,255,255,1);
+}
+
 .link-container-header h5 {
   color: hsl(257, 7%, 63%);
   font-size: 1.3rem;

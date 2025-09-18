@@ -83,7 +83,7 @@
           </div>
           <div v-if="shortenedLinks.length > 0">
             <div class="loading" v-if="loading">
-              <p>Please wait your link is loading.....</p>
+              <p>Please wait, your link is loading.....</p>
             </div>
             <div v-for="(link, index) in shortenedLinks" :key="index">
               <div class="links">
@@ -100,14 +100,21 @@
                   <p>{{ link.originalUrl }}</p>
                 </div>
                 <div class="right2">
-                  <div>
+                  <div class="qr-block">
                     <img
                       :src="generateQRCode(link.shortened_url)"
                       alt="QR Code"
                     />
+                    <div class="qr-actions">
+                      <button
+                        @click="downloadQRCode(link.shortened_url, index)"
+                      >
+                        <img src="../assets/images/download.png" alt="" />
+                      </button>
+                    </div>
                   </div>
                   <p>1</p>
-                  <p>Nigeria</p>
+                  <p>Jigawa, Nig.</p>
                   <p>{{ link.date }}</p>
                   <div>
                     <button @click="deleteLink(index)">Delete</button>
@@ -133,6 +140,11 @@
                     :src="generateQRCode(link.shortened_url)"
                     alt="QR Code"
                   />
+                  <div class="qr-actions-mobile">
+                    <button @click="downloadQRCode(link.shortened_url, index)">
+                       <img src="../assets/images/download.png" alt="" />
+                    </button>
+                  </div>
                 </div>
                 <p>Clicks: 1</p>
                 <p>Location: Nigeria</p>
@@ -146,7 +158,6 @@
                     {{ link.copied ? "Copied!" : "Copy" }}
                   </button>
                   <button @click="deleteLink(index)">Delete</button>
-
                 </div>
               </div>
             </div>
@@ -155,7 +166,6 @@
       </div>
       <!-- </div> -->
     </div>
-    
 
     <footer-bg />
 
@@ -180,7 +190,12 @@ const userFirstName = ref<string>("");
 const originalUrl = ref<string>("");
 const customUrl = ref<string>("");
 const shortenedLinks = ref<
-  Array<{ originalUrl: string; shortened_url: string; copied: boolean; date: string; }>
+  Array<{
+    originalUrl: string;
+    shortened_url: string;
+    copied: boolean;
+    date: string;
+  }>
 >([]);
 const loading = ref<boolean>(false); // New loading indicator state
 const errorMessage = ref<string>("");
@@ -216,7 +231,7 @@ const shortenUrl = async () => {
 
   loading.value = true;
   try {
-    const clientUrl = "sshortly.netlify.app";
+    const clientUrl = "s-h.netlify.app";
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       {
@@ -234,7 +249,6 @@ const shortenUrl = async () => {
     const shortenedUrl = response.data["data"]["short_id"];
     const created_at = response.data["data"]["created_at"];
     const currentDate = new Date(created_at).toLocaleDateString(); // Convert the created_at date to a human-readable format
-
 
     combinedUrl.value = `${clientUrl}/sh/${shortenedUrl}`;
     // This is the shortened URL that is to be saved to Firebase and visited by the user
@@ -291,10 +305,6 @@ const copyToClipboard = (text: string, index: number) => {
   });
 };
 
-
-
-
-
 // Watch for changes in shortenedLinks and update local storage accordingly
 
 //
@@ -323,10 +333,34 @@ const deleteLink = async (index: number) => {
 };
 
 const generateQRCode = (text: string): string => {
-  const baseUrl = "http://api.qrserver.com/v1/create-qr-code/";
+  const baseUrl = "https://api.qrserver.com/v1/create-qr-code/";
   const encodedText = encodeURIComponent(text);
   const size = "80x80"; // Adjust size as needed
   return `${baseUrl}?data=${encodedText}&size=${size}`;
+};
+
+// Download the generated QR code as an image file
+const downloadQRCode = async (text: string, index: number) => {
+  try {
+    const url = generateQRCode(text);
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Failed to fetch QR code: ${resp.status}`);
+    const blob = await resp.blob();
+    const filename = `qrcode_${index || Date.now()}.png`;
+
+    // Create a temporary anchor to trigger the download
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch (err) {
+    console.error("Error downloading QR code", err);
+    alert("Unable to download QR code. Please try again.");
+  }
 };
 
 watchEffect(() => {
@@ -371,5 +405,4 @@ const handleLogout = async () => {
 <style scoped>
 /* Add your styles for the dashboard page here */
 @import "../assets/styles/dashboard.css";
-
 </style>

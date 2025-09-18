@@ -231,7 +231,7 @@ const shortenUrl = async () => {
   loading.value = true;
 
   try {
-    const clientUrl = 'sshortly.netlify.app';
+    const clientUrl = 's-h.netlify.app/';
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       { url: originalUrl.value }, 
