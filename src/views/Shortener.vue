@@ -278,7 +278,7 @@ const shortenUrl = async () => {
   pendingRequests.add(pendingKey);
 
   try {
-    const clientUrl = 's-h.netlify.app/';
+    const clientUrl = 's-h.netlify.app';
     const response = await axios.post(
       "https://url-shortener-qnn7.onrender.com/api/v1/shorten",
       { url: originalUrl.value }, 
