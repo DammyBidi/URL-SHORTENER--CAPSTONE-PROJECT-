@@ -4,9 +4,9 @@
     <nav>
       <div class="links">
         <h3>Shortly</h3>
-        <a href="">features</a>
+        <!-- <a href="">features</a>
         <a href="">Pricing</a>
-        <a href="">Resources</a>
+        <a href="">Resources</a> -->
       </div>
       <div class="login">
         <router-link to="/login"> Login</router-link>
@@ -50,30 +50,44 @@
       <div class="warning"><p>You can only create 02 links here. Signup or login to get the full features of this app</p></div>
       
       <div class="form">
-        <form @submit.prevent="shortenUrl">
+          <form @submit.prevent="shortenUrl">
           <div class="input-container">
-            <input
-              type="url"
-              name="url-input"
-              v-model="originalUrl"
-              placeholder="Shorten a link here..."
-              :class="{ 'error-input': errorMessage }"
-              :style="{
-                borderColor: errorMessage ? 'hsl(0, 87%, 67%)' : '',
-                color: errorMessage ? 'hsl(0, 87%, 67%)' : '',
-              }"
-            />
+              <input
+                type="url"
+                name="url-input"
+                v-model="originalUrl"
+                placeholder="Shorten a link here..."
+                :class="{ 'error-input': errorMessage }"
+                :style="{
+                  borderColor: errorMessage ? 'hsl(0, 87%, 67%)' : '',
+                  color: errorMessage ? 'hsl(0, 87%, 67%)' : '',
+                }"
+                :disabled="loading"
+              />
             <label v-if="errorMessage" class="error-message" for="url-input">
               <i> {{ errorMessage }} </i>
             </label>
           </div>
-          <button type="submit">Shorten It!</button>
+          <button type="submit" :disabled="loading" class="submit-button">
+            <span v-if="loading" aria-live="polite" class="button-content">
+              <!-- inline spinner -->
+              <svg width="16" height="16" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="25" cy="25" r="20" stroke="#fff" stroke-opacity="0.2" stroke-width="5"/>
+                <path d="M45 25a20 20 0 0 1-20 20" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+              </svg>
+              <span style="margin-left:8px">Shortening...</span>
+            </span>
+            <span v-else>Shorten It!</span>
+          </button>
         </form>
       </div>
       
     </header>
 
-    <div class="grey-bg">
+  <!-- Toast container -->
+  <div v-if="toastMessage" :class="['toast', toastType]" role="status" aria-live="polite">{{ toastMessage }}</div>
+
+  <div class="grey-bg">
       <div class="link-section">
         <div v-if="loading">Loading...</div>
         <div v-if="lastTwoShortenedLinks.length > 0">
@@ -188,6 +202,14 @@ const showMobileNav = ref<boolean>(false);
 // Store the client URL with the shortened ID in combineUrl 
 const combinedUrl = ref<string>("");
 const amountOfLinks = ref<number>(0);
+// Toast state
+const toastMessage = ref<string>("");
+const toastType = ref<'success'|'error'|'info'>('success');
+const showToast = (msg: string, type: 'success'|'error'|'info' = 'info', ms = 3000) => {
+  toastMessage.value = msg;
+  toastType.value = type;
+  setTimeout(() => (toastMessage.value = ''), ms);
+};
 
 // Fetch data from local storage when the component is mounted
 
@@ -213,7 +235,8 @@ const updateLastTwoShortenedLinks = () => {
 const shortenUrl = async () => {
   errorMessage.value = "";
 
-  if (!originalUrl.value.trim()) {
+  const normalized = originalUrl.value.trim();
+  if (!normalized) {
     errorMessage.value = "Please enter a valid URL";
     return;
   }
@@ -221,14 +244,38 @@ const shortenUrl = async () => {
   // Set loading to true before starting the asynchronous operation
   
 
- if(amountOfLinks.value > 2){
+  if(amountOfLinks.value > 2){
    errorMessage.value = "You have reached the maximum amount of links allowed please signup or login to get more links";
-   alert("You have reached the maximum amount of links allowed please signup or login to get more links");
+   showToast("You have reached the maximum amount of links allowed — please signup or login to get more links", 'info');
    return; 
+  }
+
+  // Prevent duplicate concurrent shorten requests for the same URL
+  const pendingKey = normalized.toLowerCase();
+  if ((window as any).__pendingShortenRequests === undefined) {
+    (window as any).__pendingShortenRequests = new Set<string>();
+  }
+  const pendingRequests: Set<string> = (window as any).__pendingShortenRequests;
+  if (pendingRequests.has(pendingKey)) {
+    // There's already an in-flight request for this URL
+    return;
+  }
+
+  // Check local cache first to return instantly if already shortened
+  const cached = shortenedLinks.value.find(
+    (l) => l.originalUrl.trim().toLowerCase() === normalized.toLowerCase()
+  );
+  if (cached) {
+    // Move cached link to front for visibility
+    shortenedLinks.value = [cached, ...shortenedLinks.value.filter(l => l !== cached)];
+    updateLastTwoShortenedLinks();
+    originalUrl.value = "";
+    return;
   }
 
   amountOfLinks.value += 1;
   loading.value = true;
+  pendingRequests.add(pendingKey);
 
   try {
     const clientUrl = 's-h.netlify.app/';
@@ -270,16 +317,20 @@ const shortenUrl = async () => {
       shortened_url: combinedUrl.value,
       copied: false
     });
+    updateLastTwoShortenedLinks();
+    showToast('Link shortened successfully', 'success');
+    updateLastTwoShortenedLinks();
 
     // Clear input fields
     originalUrl.value = "";
     customUrl.value = "";
   } catch (error) {
     console.error("Error shortening URL:", error);
-    alert("Error shortening URL. Please try again.");
+    showToast('Error shortening URL. Please try again.', 'error');
   } finally {
     // Set loading to false after the asynchronous operation completes or encounters an error
     loading.value = false;
+    pendingRequests.delete(pendingKey);
   }
 
   // addDoc(collection(db, "your-collection"), {})

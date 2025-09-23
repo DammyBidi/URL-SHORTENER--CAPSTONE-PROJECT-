@@ -1,6 +1,7 @@
 <!-- src/views/Dashboard.vue -->
 <template>
   <div>
+    <div v-if="toastMessage" :class="['toast', toastType]" role="status" aria-live="polite">{{ toastMessage }}</div>
     <nav>
       <div class="nav-logo">
         <h3>Shortly</h3>
@@ -32,6 +33,7 @@
                   borderColor: errorMessage ? 'hsl(0, 87%, 67%)' : '',
                   color: errorMessage ? 'hsl(0, 87%, 67%)' : '',
                 }"
+                :disabled="loading"
               />
               <label v-if="errorMessage" class="error-message" for="url-input">
                 <i> {{ errorMessage }} </i>
@@ -48,10 +50,20 @@
                 v-model="customUrl"
                 name="name"
                 placeholder="Custom back-half (optional)"
+                :disabled="loading"
               />
             </div>
-            <button type="submit">
-              Shorten It <img src="../assets/images/magic wand.png" alt="" />
+            <button type="submit" :disabled="loading" class="submit-button">
+              <span v-if="loading" aria-live="polite" class="button-content">
+                <svg width="16" height="16" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <circle cx="25" cy="25" r="20" stroke="#fff" stroke-opacity="0.2" stroke-width="5"/>
+                  <path d="M45 25a20 20 0 0 1-20 20" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+                </svg>
+                <span style="margin-left:8px">Shortening...</span>
+              </span>
+              <span v-else>
+                Shorten It <img src="../assets/images/magic wand.png" alt="" />
+              </span>
             </button>
             <p>
               By clicking Shorten It, I agree to the
@@ -202,6 +214,15 @@ const errorMessage = ref<string>("");
 // Store the client URL with the shortened ID in combineUrl
 const combinedUrl = ref<string>("");
 
+// Toast state
+const toastMessage = ref<string>("");
+const toastType = ref<'success'|'error'|'info'>('success');
+const showToast = (msg: string, type: 'success'|'error'|'info' = 'info', ms = 3000) => {
+  toastMessage.value = msg;
+  toastType.value = type;
+  setTimeout(() => (toastMessage.value = ''), ms);
+};
+
 const storedLinks = localStorage.getItem("shortenedLinks");
 if (storedLinks) {
   shortenedLinks.value = JSON.parse(storedLinks);
@@ -209,27 +230,35 @@ if (storedLinks) {
 
 const shortenUrl = async () => {
   errorMessage.value = "";
-
-  const normalizedUrl = originalUrl.value.trim().toLowerCase();
-  if (!originalUrl.value.trim()) {
+  const normalizedUrl = originalUrl.value.trim();
+  if (!normalizedUrl) {
     errorMessage.value = "Please enter a valid URL";
     return;
   }
   // Check if the URL has already been shortened
   const existingLinkIndex = shortenedLinks.value.findIndex(
-    (link) => link.originalUrl.toLowerCase() === normalizedUrl
+    (link) => link.originalUrl.trim().toLowerCase() === normalizedUrl.toLowerCase()
   );
   if (existingLinkIndex !== -1) {
     // URL already exists in the list, provide feedback
     const existingShortenedUrl =
       shortenedLinks.value[existingLinkIndex].shortened_url;
-    alert(
-      `This URL has already been shortened:\n${existingShortenedUrl}, Please check your list of shortened URLs.`
-    );
+    // show toast instead of alert
+    showToast(`This URL has already been shortened: ${existingShortenedUrl}`, 'info');
     return;
   }
 
   loading.value = true;
+  // Prevent duplicate concurrent shorten requests for same URL
+  if ((window as any).__pendingShortenRequests === undefined) {
+    (window as any).__pendingShortenRequests = new Set<string>();
+  }
+  const pendingRequests: Set<string> = (window as any).__pendingShortenRequests;
+  const pendingKey = normalizedUrl.toLowerCase();
+  if (pendingRequests.has(pendingKey)) {
+    return;
+  }
+  pendingRequests.add(pendingKey);
   try {
     const clientUrl = "s-h.netlify.app/"; 
     const response = await axios.post(
@@ -270,15 +299,24 @@ const shortenUrl = async () => {
       date: currentDate,
     });
 
+    // persist and ensure UI order is updated
+    localStorage.setItem("shortenedLinks", JSON.stringify(shortenedLinks.value));
+
+    showToast('Link shortened successfully', 'success');
+
     // Clear input fields
     originalUrl.value = "";
     customUrl.value = "";
   } catch (error) {
     console.error("Error shortening URL:", error);
-    alert("Error shortening URL. Please try again.");
+    showToast('Error shortening URL. Please try again.', 'error');
   } finally {
     // Set loading to false after the asynchronous operation completes or encounters an error
     loading.value = false;
+    // remove pending request marker
+    if ((window as any).__pendingShortenRequests) {
+      (window as any).__pendingShortenRequests.delete(pendingKey);
+    }
   }
 
   addDoc(collection(db, "your-collection"), {})
